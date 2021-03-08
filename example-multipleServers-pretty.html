@@ -4,7 +4,7 @@
 <link rel="shortcut icon" href="favicon.ico">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no" />
-<title>LibreSpeed Example</title>
+<title>Rural SeepdTest</title>
 <script type="text/javascript" src="speedtest.js"></script>
 <script type="text/javascript">
 
@@ -73,8 +73,6 @@ function loadServers(){ //called when the page is fully loaded
     
 }
 
-
-
 function startStop(){ //start/stop button pressed
 	if(s.getState()==3){
 		//speedtest is running, abort
@@ -86,8 +84,33 @@ function startStop(){ //start/stop button pressed
 	}
 }
 
+//this function reads the data sent back by the test and updates the UI
+function updateUI(forced){
+	if(!forced&&s.getState()!=3) return;
+	if(uiData==null) return;
+	var status=uiData.testState;
+	I("ip").textContent=uiData.clientIp;
+	I("dlText").textContent=(status==1&&uiData.dlStatus==0)?"...":format(uiData.dlStatus);
+	drawMeter(I("dlMeter"),mbpsToAmount(Number(uiData.dlStatus*(status==1?oscillate():1))),meterBk,dlColor,Number(uiData.dlProgress),progColor);
+	I("ulText").textContent=(status==3&&uiData.ulStatus==0)?"...":format(uiData.ulStatus);
+	drawMeter(I("ulMeter"),mbpsToAmount(Number(uiData.ulStatus*(status==3?oscillate():1))),meterBk,ulColor,Number(uiData.ulProgress),progColor);
+	I("pingText").textContent=format(uiData.pingStatus);
+	I("jitText").textContent=format(uiData.jitterStatus);
+}
+function oscillate(){
+	return 1+0.02*Math.sin(Date.now()/100);
+}
+//update the UI every frame
+window.requestAnimationFrame=window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.msRequestAnimationFrame||(function(callback,element){setTimeout(callback,1000/60);});
+function frame(){
+	requestAnimationFrame(frame);
+	updateUI();
+}
+frame(); //start frame loop
 //function to (re)initialize UI
 function initUI(){
+	drawMeter(I("dlMeter"),0,meterBk,dlColor,0);
+	drawMeter(I("ulMeter"),0,meterBk,ulColor,0);
 	I("dlText").textContent="";
 	I("ulText").textContent="";
 	I("pingText").textContent="";
@@ -134,10 +157,10 @@ function I(id){return document.getElementById(id);}
 		color:#FFFFFF;
 	}
 	#startStopBtn:before{
-		content:"Start";
+		content:"Iniciar";
 	}
 	#startStopBtn.running:before{
-		content:"Abort";
+		content:"Parar";
 	}
 	#test{
 		margin-top:2em;
@@ -204,13 +227,14 @@ function I(id){return document.getElementById(id);}
 </style>
 </head>
 <body>
-<h1>LibreSpeed Example</h1>
+<h1>Rural SeepdTest</h1>
 <div id="startStopBtn" onclick="startStop()"></div>
 <div id="serverId">Selecting server...</div>
 <div id="test">
 	<div class="testGroup">
 		<div class="testArea">
 			<div class="testName">Download</div>
+			<canvas id="dlMeter" class="meter"></canvas>
 			<div id="dlText" class="meterText"></div>
 			<div class="unit">Mbps</div>
 		</div>
@@ -236,7 +260,7 @@ function I(id){return document.getElementById(id);}
 		IP Address: <span id="ip"></span>
 	</div>
 </div>
-<a href="https://github.com/librespeed/speedtest">Source code</a>
+<!-- <a href="https://github.com/librespeed/speedtest">Source code</a> -->
 <script type="text/javascript">
     initUI();
     loadServers();

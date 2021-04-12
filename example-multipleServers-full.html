@@ -7,28 +7,10 @@
 	<meta charset="UTF-8" />
 	<script type="text/javascript" src="speedtest.js"></script>
 	<script type="text/javascript">
+
 		function I(i) { return document.getElementById(i); }
 
-		//LIST OF TEST SERVERS. See documentation for details if needed
-		var SPEEDTEST_SERVERS = [
-			{	//this is my demo server, remove it
-				name: "Speedtest Demo Server (Helsinki)", //user friendly name for the server
-				server: "//fi.openspeed.org/", //URL to the server. // at the beginning will be replaced with http:// or https:// automatically
-				dlURL: "garbage.php",  //path to download test on this server (garbage.php or replacement)
-				ulURL: "empty.php",  //path to upload test on this server (empty.php or replacement)
-				pingURL: "empty.php",  //path to ping/jitter test on this server (empty.php or replacement)
-				getIpURL: "getIP.php"  //path to getIP on this server (getIP.php or replacement)
-			},
-			{	//this is my demo server, remove it
-				name: "Old Speedtest Demo Server",
-				server: "//mpotdemo.fdossena.com/",
-				dlURL: "garbage.php",
-				ulURL: "empty.php",
-				pingURL: "empty.php",
-				getIpURL: "getIP.php"
-			}
-			//add other servers here, comma separated
-		];
+		var SPEEDTEST_SERVERS = "backend/servers.php"
 
 		//INITIALIZE SPEEDTEST
 		var s = new Speedtest(); //create speedtest object
@@ -54,6 +36,7 @@
 						}
 						//show test UI
 						I("testWrapper").className = "visible";
+						updateSponsor();
 						initUI();
 					} else { //no servers are available, the test cannot proceed
 						noServersAvailable();
@@ -79,9 +62,7 @@
 
 		var meterBk = /Trident.*rv:(\d+\.\d+)/i.test(navigator.userAgent) ? "#EAEAEA" : "#80808040";
 		var dlColor = "#6060AA",
-			ulColor = "#32CD32",
-			plColor = "#FF0033",
-			jlColor = "#5AADFF";
+			ulColor = "#616161";
 		var progColor = meterBk;
 
 		//CODE FOR GAUGES
@@ -160,26 +141,18 @@
 				s.start();
 			}
 		}
-
 		//this function reads the data sent back by the test and updates the UI
 		function updateUI(forced) {
 			if (!forced && s.getState() != 3) return;
 			if (uiData == null) return;
 			var status = uiData.testState;
-
 			I("ip").textContent = uiData.clientIp;
-
 			I("dlText").textContent = (status == 1 && uiData.dlStatus == 0) ? "..." : format(uiData.dlStatus);
-			drawMeter(I("dlMeter"), mbpsToAmount(Number(uiData.dlStatus * (status == 3 ? oscillate() : 1))), meterBk, dlColor, Number(uiData.dlProgress), progColor);
-
+			drawMeter(I("dlMeter"), mbpsToAmount(Number(uiData.dlStatus * (status == 1 ? oscillate() : 1))), meterBk, dlColor, Number(uiData.dlProgress), progColor);
 			I("ulText").textContent = (status == 3 && uiData.ulStatus == 0) ? "..." : format(uiData.ulStatus);
 			drawMeter(I("ulMeter"), mbpsToAmount(Number(uiData.ulStatus * (status == 3 ? oscillate() : 1))), meterBk, ulColor, Number(uiData.ulProgress), progColor);
-
 			I("pingText").textContent = format(uiData.pingStatus);
-			drawMeter(I("plMeter"), mbpsToAmount(Number(uiData.plStatus * (status == 3 ? oscillate() : 1))), meterBk, plColor, Number(uiData.plProgress), progColor);
-
 			I("jitText").textContent = format(uiData.jitterStatus);
-			drawMeter(I("jlMeter"), mbpsToAmount(Number(uiData.jlStatus * (status == 3 ? oscillate() : 1))), meterBk, jlColor, Number(uiData.jlProgress), progColor);
 		}
 		function oscillate() {
 			return 1 + 0.02 * Math.sin(Date.now() / 100);
@@ -197,12 +170,26 @@
 			drawMeter(I("ulMeter"), 0, meterBk, ulColor, 0);
 			I("dlText").textContent = "";
 			I("ulText").textContent = "";
-
-			drawMeter(I("plMeter"), 0, meterBk, plColor, 0);
-			drawMeter(I("jlMeter"), 0, meterBk, jlColor, 0);
 			I("pingText").textContent = "";
 			I("jitText").textContent = "";
 			I("ip").textContent = "";
+		}
+		function updateSponsor() {
+			var server = SPEEDTEST_SERVERS[I("server").value];
+			if (server == null) return;
+			if (server.sponsorName != null) {
+				I("sponsorArea").style.visibility = "visible";
+				if (server.sponsorURL != null) {
+					var a = document.createElement("a");
+					a.href = server.sponsorURL;
+					a.innerText = server.sponsorName;
+					a.target = "_blank";
+					I("sponsor").innerHTML = "";
+					I("sponsor").appendChild(a);
+				} else {
+					I("sponsor").innerText = server.sponsorName
+				}
+			} else I("sponsorArea").style.visibility = "hidden";
 		}
 	</script>
 	<style type="text/css">
@@ -473,13 +460,11 @@
 			<div class="testGroup">
 				<div class="testArea">
 					<div class="testName">Ping</div>
-					<canvas id="plMeter" class="meter"></canvas>
 					<div id="pingText" class="meterText" style="color:#056566"></div>
 					<div class="unit">ms</div>
 				</div>
 				<div class="testArea">
 					<div class="testName">Jitter</div>
-					<canvas id="jlMeter" class="meter"></canvas>
 					<div id="jitText" class="meterText" style="color:#056566"></div>
 					<div class="unit">ms</div>
 				</div>
@@ -508,14 +493,12 @@
 					onclick="this.select();this.focus();this.select();document.execCommand('copy');alert('Link copied')" />
 				<img src="" id="resultsImg" />
 			</div>
-			<br/>
+			<br />
 			<div id="startStopBtn" onclick="startStop()"></div><br />
-			<!-- <a class="privacy" href="#" onclick="I('privacyPolicy').style.display=''">Privacy</a> -->
 			<div id="serverArea">
 				Server: <select id="server" onchange="s.setSelectedServer(SPEEDTEST_SERVERS[this.value])"></select>
 			</div>
 		</div>
-		<a href="https://github.com/christopherkpers/speedtest">Source code</a>
 	</div>
 </body>
 

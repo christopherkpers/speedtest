@@ -36,7 +36,7 @@
 						}
 						//show test UI
 						I("testWrapper").className = "visible";
-						updateSponsor();
+						//updateSponsor();
 						initUI();
 					} else { //no servers are available, the test cannot proceed
 						noServersAvailable();
@@ -62,7 +62,9 @@
 
 		var meterBk = /Trident.*rv:(\d+\.\d+)/i.test(navigator.userAgent) ? "#EAEAEA" : "#80808040";
 		var dlColor = "#6060AA",
-			ulColor = "#616161";
+			ulColor = "#309030",
+			plColor = "#AA6060",
+			jlColor = "#00A2E8";
 		var progColor = meterBk;
 
 		//CODE FOR GAUGES
@@ -149,10 +151,16 @@
 			I("ip").textContent = uiData.clientIp;
 			I("dlText").textContent = (status == 1 && uiData.dlStatus == 0) ? "..." : format(uiData.dlStatus);
 			drawMeter(I("dlMeter"), mbpsToAmount(Number(uiData.dlStatus * (status == 1 ? oscillate() : 1))), meterBk, dlColor, Number(uiData.dlProgress), progColor);
-			I("ulText").textContent = (status == 3 && uiData.ulStatus == 0) ? "..." : format(uiData.ulStatus);
-			drawMeter(I("ulMeter"), mbpsToAmount(Number(uiData.ulStatus * (status == 3 ? oscillate() : 1))), meterBk, ulColor, Number(uiData.ulProgress), progColor);
-			I("pingText").textContent = format(uiData.pingStatus);
-			I("jitText").textContent = format(uiData.jitterStatus);
+			I("ulText").textContent = (status == 1 && uiData.ulStatus == 0) ? "..." : format(uiData.ulStatus);
+			drawMeter(I("ulMeter"), mbpsToAmount(Number(uiData.ulStatus * (status == 1 ? oscillate() : 1))), meterBk, ulColor, Number(uiData.ulProgress), progColor);
+
+			I("pingText").textContent = (status == 0 && uiData.pingStatus == 0) ? "..." : format(uiData.pingStatus);
+			drawMeter(I("plMeter"), mbpsToAmount(Number(uiData.pingStatus * (status == 0 ? oscillate() : 1))), meterBk, plColor, Number(uiData.plProgress), progColor);
+			I("jitText").textContent = (status == 0 && uiData.jitterStatus == 0) ? "..." : format(uiData.jitterStatus);
+			drawMeter(I("jlMeter"), mbpsToAmount(Number(uiData.jitterStatus * (status == 0 ? oscillate() : 1))), meterBk, jlColor, Number(uiData.ujlProgress), progColor);
+			
+			//I("pingText").textContent = format(uiData.pingStatus);
+			//I("jitText").textContent = format(uiData.jitterStatus);
 		}
 		function oscillate() {
 			return 1 + 0.02 * Math.sin(Date.now() / 100);
@@ -168,6 +176,10 @@
 		function initUI() {
 			drawMeter(I("dlMeter"), 0, meterBk, dlColor, 0);
 			drawMeter(I("ulMeter"), 0, meterBk, ulColor, 0);
+
+			drawMeter(I("plMeter"), 0, meterBk, plColor, 0);
+			drawMeter(I("jlMeter"), 0, meterBk, jlColor, 0);
+
 			I("dlText").textContent = "";
 			I("ulText").textContent = "";
 			I("pingText").textContent = "";
@@ -450,7 +462,7 @@
 </head>
 
 <body onload="initServers()">
-	<h1>RURAL FONE</h1>
+	<h1 style="color:#880015; font-size:100px;">RURAL FONE</h1>
 	<div id="loading" class="visible">
 		<p id="message"><span class="loadCircle"></span>Selecting a server...</p>
 	</div>
@@ -459,28 +471,28 @@
 		<div id="test">
 			<div class="testGroup">
 				<div class="testArea">
-					<div class="testName">Ping</div>
-					<div id="pingText" class="meterText" style="color:#056566"></div>
-					<div class="unit">ms</div>
-				</div>
-				<div class="testArea">
-					<div class="testName">Jitter</div>
-					<div id="jitText" class="meterText" style="color:#056566"></div>
-					<div class="unit">ms</div>
-				</div>
-			</div>
-			<div class="testGroup">
-				<div class="testArea">
 					<div class="testName">Download</div>
 					<canvas id="dlMeter" class="meter"></canvas>
-					<div id="dlText" class="meterText" style="color:#056566"></div>
+					<div id="dlText" class="meterText" style="color:#000000"></div>
 					<div class="unit">Mbps</div>
 				</div>
 				<div class="testArea">
 					<div class="testName">Upload</div>
 					<canvas id="ulMeter" class="meter"></canvas>
-					<div id="ulText" class="meterText" style="color:#056566"></div>
+					<div id="ulText" class="meterText" style="color:#000000"></div>
 					<div class="unit">Mbps</div>
+				</div>
+				<div class="testArea">
+					<div class="testName">Ping</div>
+					<canvas id="plMeter" class="meter"></canvas>
+					<div id="pingText" class="meterText" style="color:#000000"></div>
+					<div class="unit">ms</div>
+				</div>
+				<div class="testArea">
+					<div class="testName">Jitter</div>
+					<canvas id="jlMeter" class="meter"></canvas>
+					<div id="jitText" class="meterText" style="color:#000000"></div>
+					<div class="unit">ms</div>
 				</div>
 			</div>
 			<div id="ipArea">
@@ -495,7 +507,7 @@
 			</div>
 			<br />
 			<div id="startStopBtn" onclick="startStop()"></div><br />
-			<div id="serverArea">
+			<div id="serverArea" style="visibility: hidden">
 				Server: <select id="server" onchange="s.setSelectedServer(SPEEDTEST_SERVERS[this.value])"></select>
 			</div>
 		</div>

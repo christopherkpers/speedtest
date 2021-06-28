@@ -1,10 +1,3 @@
-/*
-	LibreSpeed - Worker
-	by Federico Dossena
-	https://github.com/librespeed/speedtest/
-	GNU LGPLv3 License
-*/
-
 // data reported to main thread
 var testState = -1; // -1=not started, 0=starting, 1=download test, 2=ping+jitter test, 3=upload test, 4=finished, 5=abort
 var dlStatus = ""; // download speed in megabit/s with 2 decimal digits
@@ -63,7 +56,7 @@ var settings = {
 	overheadCompensationFactor: 1.06, //can be changed to compensatie for transport overhead. (see doc.md for some other values)
 	useMebibits: false, //if set to true, speed will be reported in mebibits/s instead of megabits/s
 	telemetry_level: 0, // 0=disabled, 1=basic (results only), 2=full (results and timing) 3=debug (results+log)
-	url_telemetry: "results/telemetry.php", // path to the script that adds telemetry data to the database
+	//url_telemetry: "results/telemetry.php", // path to the script that adds telemetry data to the database
 	telemetry_extra: "", //extra data that can be passed to the telemetry through the settings
     forceIE11Workaround: false //when set to true, it will foce the IE11 upload test on all browsers. Debug only
 };
@@ -178,16 +171,16 @@ this.addEventListener("message", function(e) {
 			pRun = false;
 		var runNextTest = function() {
 			if (testState == 5) return;
-			if (test_pointer >= settings.test_order.length) {
+			//if (test_pointer >= settings.test_order.length) {
 				//test is finished
-				if (settings.telemetry_level > 0)
-					sendTelemetry(function(id) {
-						testState = 4;
-						if (id != null) testId = id;
-					});
-				else testState = 4;
-				return;
-			}
+				//if (settings.telemetry_level > 0)
+					//sendTelemetry(function(id) {
+						//testState = 4;
+						//if (id != null) testId = id;
+					//});
+				//else testState = 4;
+				//return;
+			//}
 			switch (settings.test_order.charAt(test_pointer)) {
 				case "I":
 					{
@@ -679,7 +672,7 @@ function pingTest(done) {
 	doPing(); // start first ping
 }
 // telemetry
-function sendTelemetry(done) {
+/*function sendTelemetry(done) {
 	if (settings.telemetry_level < 1) return;
 	xhr = new XMLHttpRequest();
 	xhr.onload = function() {
@@ -721,4 +714,4 @@ function sendTelemetry(done) {
 		xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 		xhr.send(postData);
 	}
-}
+}*/
